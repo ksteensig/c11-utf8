@@ -137,43 +137,70 @@ void grow_string(utf8_t *ustr) {
 
     memcpy(n_ustr->utf8_string, ustr->u8str->utf8_string, sizeof(uint8_t) * ustr->u8str->bytes);
 
-    //free_utf8rep(ustr->u8str);
+    free_utf8rep(ustr);
 
     ustr->u8str = n_ustr;
 }
 
-void free_utf8(utf8_t *ustr) {
-
+void free_utf8rep(utf8_t *ustr) {
+    free(ustr->u8str->utf8_string);
+    free(ustr->u8str);
 }
 
-/*
+void free_utf8(utf8_t *ustr) {
+    free_utf8rep(ustr);
+    free(ustr);
+}
 
-utf8_t convert_to_utf8(uint32_t ch) {
-    utf8_t u;
+uint64_t utf8_strlen(utf8_t *ustr) {
+    return ustr->u8str->chars;
+}
 
-    if (is_1byte(ch)) {
-        u.bytes = 1;
-        u.uchar[0] = (uint8_t)(ch & 0xFF);
-    } else if (is_2byte(ch)) {
-        u.bytes = 2;
-        u.uchar[0] = (uint8_t)(ch & 0xFF);
-        u.uchar[1] = (uint8_t)((ch >> 8) & 0xFF);
-    } else if (is_3byte(ch)) {
-        u.bytes = 3;
-        u.uchar[0] = (uint8_t)(ch & 0xFF);
-        u.uchar[1] = (uint8_t)((ch >> 8) & 0xFF);
-        u.uchar[2] = (uint8_t)((ch >> 16) & 0xFF);
-    } else if (is_4byte(ch)) {
-        u.bytes = 4;
-        u.uchar[0] = (uint8_t)(ch & 0xFF);
-        u.uchar[1] = (uint8_t)((ch >> 8) & 0xFF);
-        u.uchar[2] = (uint8_t)((ch >> 16) & 0xFF);
-        u.uchar[3] = (uint8_t)((ch >> 24) & 0xFF);
+bool utf8_strcmp(utf8_t *ustr1, utf8_t *ustr2) {
+    if (ustr1->u8str->bytes == ustr2->u8str->bytes) {
+        return false;
     } else {
-        u.bytes = 0;
+        for (uint64_t i = 0; i < ustr1->u8str->bytes; i++) {
+            if (ustr1->u8str->utf8_string[i] != ustr2->u8str->utf8_string[i]) {
+                return false;
+            }
+        }
     }
 
-    return u;
+    return true;
 }
 
-*/
+
+utf8_t *utf8_concat(utf8_t *ustr1, utf8_t *ustr2) {
+    utf8_t *n_ustr = init_utf8();
+    uint8_t *utf8_string = malloc(sizeof(uint8_t) *
+                                 (ustr1->u8str->bytes +
+                                  ustr2->u8str->bytes +
+                                  DEFAULT_UTF8_STRING_LENGTH));
+    memcpy(utf8_string,
+           ustr1->u8str->utf8_string,
+           sizeof(uint8_t) * ustr1->u8str->bytes);
+
+    memcpy(utf8_string + ustr1->u8str->bytes,
+           ustr2->u8str->utf8_string,
+           sizeof(uint8_t) * ustr1->u8str->bytes);
+    
+    n_ustr->u8str->bytes = ustr1->u8str->bytes + ustr2->u8str->bytes;
+    n_ustr->u8str->chars = ustr1->u8str->chars + ustr2->u8str->chars;
+    n_ustr->u8str->length = ustr1->u8str->bytes + ustr2->u8str->bytes + DEFAULT_UTF8_STRING_LENGTH;
+
+    if (ustr1->u8str->chars > ustr2->u8str->chars) {
+        n_ustr->u8str->cache.inserted_length = ustr1->u8str->cache.inserted_length;
+        n_ustr->u8str->cache.inserted_pos = ustr1->u8str->cache.inserted_pos;
+    } else {
+        n_ustr->u8str->cache.inserted_length = ustr2->u8str->cache.inserted_length;
+        n_ustr->u8str->cache.inserted_pos = ustr2->u8str->cache.inserted_pos;
+    }
+
+    n_ustr->u8str->utf8_string = utf8_string;
+
+    free_utf8(ustr1);
+    free_utf8(ustr2);
+
+    return n_ustr;
+}

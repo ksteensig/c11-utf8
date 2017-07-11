@@ -34,6 +34,7 @@ typedef enum utf8_error_e {
     INVALID_UTF8        = 0,
     OUT_OF_BOUND_ERROR  = 1,
     NULL_ERROR          = 2,
+    NOT_A_CHARACTER     = 3,
     UNKNOWN             = 0xFF
 } utf8_error_t;
 
@@ -67,13 +68,15 @@ void grow_string(utf8_t *ustr);
 utf8_t *convert_to_utf8(uint8_t *bytes, uint64_t len);
 void add_character(utf8_t *ustr, uint8_t bytes[4], uint8_t len);
 
-/*
-utf8_t *utf8_concat(utf8_t ustr1, utf8_t ustr2);
-utf8_t *utf8_append(utf8_t ustr1, utf8_t ustr2);
-utf8_t *utf8_prepend(utf8_t ustr1, utf8_t ustr2);
-utf8_t *utf8_insert(utf8_t ustr, _utf8_t uchar, uint64_t pos);
-utf8_t *utf8_remove(utf8_t ustr, uint64_t pos);
-utf8_t *utf8_overwrite(utf8_t ustr, uint64_t pos);
-*/
+
+uint64_t utf8_strlen(utf8_t *ustr);
+bool utf8_compare(utf8_t *ustr1, utf8_t *ustr2);
+utf8_t *utf8_concat(utf8_t *ustr1, utf8_t *ustr2);
+utf8_t *utf8_access(utf8_t *ustr, uint64_t pos);
+utf8_t *utf8_insert(utf8_t *ustr1, utf8_t *ustr2, uint64_t pos);
+utf8_t *utf8_remove(utf8_t *ustr, uint64_t pos);
+utf8_t *utf8_overwrite(utf8_t *ustr, uint64_t pos);
+utf8_t *utf8_copy(utf8_t *ustr);
+
 void utf8_print(utf8_t ustr);
 utf8_t utf8_read();

@@ -12,6 +12,7 @@ int main() {
 
     printf(u8"%s\n", ustr->u8str->utf8_string);
     printf(u8"%s\n", ustr2->u8str->utf8_string);
+    printf(u8"%s\n", ustr->u8str->utf8_string);
 
     printf("%d\n", ustr2->is_error);
 
