@@ -24,46 +24,51 @@ utf8_t *init_utf8() {
     utf8_t *ustr = malloc(sizeof(utf8_t));
     utf8rep_t *ustr_rep = malloc(sizeof(utf8rep_t));
     utf8_cache_t ustr_cache;
+
     ustr_cache.inserted_length = 0;
     ustr_cache.inserted_pos = 0;
 
     ustr_rep->utf8_string = malloc(sizeof(uint8_t) * DEFAULT_UTF8_STRING_LENGTH);
+    ustr_rep->length = DEFAULT_UTF8_STRING_LENGTH;
     ustr_rep->bytes = 0;
     ustr_rep->chars = 0;
     ustr_rep->cache = ustr_cache;
 
+    ustr->is_error = false;
     ustr->u8str = ustr_rep;
-    ustr->error = false;
 
     return ustr;
 }
 
 void append_bytes(utf8_t *ustr, uint8_t bytes[4], uint8_t len) {
+    
     if (ustr->is_error) {
         return;
+    } else if ((ustr->u8str->length - ustr->u8str->bytes) <= 4) {
+        grow_string(ustr);
     }
 
     switch (len) {
         case 1:
-            (ustr->u8str)->utf8_string[ustr->u8str->bytes] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[0];
             ustr->u8str->bytes += len;
             break;
         case 2:
-            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[1];
-            ustr->u8str->utf8_string[ustr->u8str->bytes + 1] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes + 1] = bytes[1];
             ustr->u8str->bytes += len;
             break;
         case 3:
-            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[2];
+            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[0];
             ustr->u8str->utf8_string[ustr->u8str->bytes + 1] = bytes[1];
-            ustr->u8str->utf8_string[ustr->u8str->bytes + 2] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes + 2] = bytes[2];
             ustr->u8str->bytes += len;
             break;
         case 4:
-            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[3];
-            ustr->u8str->utf8_string[ustr->u8str->bytes + 1] = bytes[2];
-            ustr->u8str->utf8_string[ustr->u8str->bytes + 2] = bytes[1];
-            ustr->u8str->utf8_string[ustr->u8str->bytes + 3] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes] = bytes[0];
+            ustr->u8str->utf8_string[ustr->u8str->bytes + 1] = bytes[1];
+            ustr->u8str->utf8_string[ustr->u8str->bytes + 2] = bytes[2];
+            ustr->u8str->utf8_string[ustr->u8str->bytes + 3] = bytes[3];
             ustr->u8str->bytes += len;
             break;
         default:
@@ -75,71 +80,71 @@ void append_bytes(utf8_t *ustr, uint8_t bytes[4], uint8_t len) {
     ustr->u8str->chars++;
 }
 
-utf8_t *convert_to_utf8(uint8_t *bytes, uint8_t *end_of_array) {
+utf8_t *convert_to_utf8(uint8_t *bytes, uint64_t len) {
     utf8_t *ustr = init_utf8();
 
-    if (bytes == NULL || end_of_array == NULL) {
+    if (bytes == NULL) {
         ustr->is_error = true;
         ustr->error = NULL_ERROR;
         return ustr;
     }
 
-    ptrdiff_t diff = end_of_array - bytes;
+    uint8_t nul[] = {'\0'};
+
     uint64_t counter = 0;
 
-    while ((bytes[counter] != '\0' || bytes[counter] != -1) && (counter < diff)) {
+    while (bytes[counter] != '\0' && bytes[counter] != -1 && (counter < len)) {
         if (is_1byte(bytes[counter])) {
-            append_bytes(ustr, bytes, 1);
+            append_bytes(ustr, bytes + counter, 1);
             counter++;
         } else if (is_2byte(bytes[counter] &&
                    is_trailing(counter + 1))) {
-            append_bytes(ustr, bytes, 2);
+            append_bytes(ustr, bytes + counter, 2);
             counter += 2;
         } else if (is_3byte(bytes[counter]  &&
                    is_trailing(counter + 1) &&
                    is_trailing(counter + 2))) {
-            append_bytes(ustr, bytes, 3);
+            append_bytes(ustr, bytes + counter, 3);
             counter += 3;
         } else if (is_4byte(bytes[counter]  &&
                    is_trailing(counter + 1) &&
                    is_trailing(counter + 2) &&
                    is_trailing(counter + 3))) {
-            append_bytes(ustr, bytes, 4);
+            append_bytes(ustr, bytes + counter, 4);
             counter += 4;
         } else {
             ustr->is_error = true;
             ustr->error = INVALID_UTF8;
-        }
-
-        if (ustr->is_error) {
             return ustr;
         }
-
-        counter++;
     }
+
+    append_bytes(ustr, nul, 1);
 
     return ustr;
 }
 
-/*
-utf8_t *grow_string(utf8_t *ustr) {
+void grow_string(utf8_t *ustr) {
     // double the possible string length
-    utf8_t *n_ustr = malloc(sizeof(utf8_t));
+    utf8rep_t *n_ustr = malloc(sizeof(utf8rep_t));
     
-    n_ustr->utf8_string = malloc(sizeof(uint8_t) * ustr->bytes * 2);
-    n_ustr->bytes = ustr->bytes;
-    n_ustr->chars = ustr->chars;
-    n_ustr->_last_inserted_length = ustr->_last_inserted_length;
-    n_ustr->_last_inserted_pos = ustr->_last_inserted_pos;
+    n_ustr->utf8_string = malloc(sizeof(uint8_t) * ustr->u8str->length * 2);
+    n_ustr->length = ustr->u8str->length * 2; 
+    n_ustr->bytes = ustr->u8str->bytes;
+    n_ustr->chars = ustr->u8str->chars;
+    n_ustr->cache.inserted_length = ustr->u8str->cache.inserted_length;
+    n_ustr->cache.inserted_pos = ustr->u8str->cache.inserted_pos;
 
-    memcpy(n_ustr->utf8_string, ustr->utf8_string, sizeof(uint8_t));
+    memcpy(n_ustr->utf8_string, ustr->u8str->utf8_string, sizeof(uint8_t) * ustr->u8str->bytes);
 
-    free(ustr->utf8_string);
-    free(ustr);
+    //free_utf8rep(ustr->u8str);
 
-    return n_ustr;
+    ustr->u8str = n_ustr;
 }
-*/
+
+void free_utf8(utf8_t *ustr) {
+
+}
 
 /*
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #define DEFAULT_UTF8_STRING_LENGTH 4
 
@@ -45,7 +46,8 @@ typedef struct utf8_cache_s {
 // utf8 representation
 typedef struct utf8rep_s {
     uint8_t *utf8_string;   // the utf8 string represented by a uint8_t array
-    uint64_t bytes;         // utf8_string array length
+    uint64_t bytes;         // bytes occupied in the utf8_string
+    uint64_t length;        // length of utf8_string array
     uint64_t chars;         // char count
     utf8_cache_t cache;     // contains where the last char was inserted and how many uint8_t it is
 } utf8rep_t;
@@ -61,8 +63,8 @@ utf8_t *init_utf8();
 void free_utf8rep(utf8_t *ustr);
 void free_utf8(utf8_t *ustr);
 
-utf8_t *grow_string(utf8_t *ustr);
-utf8_t *convert_to_utf8(uint8_t *bytes, uint8_t *end_of_array);
+void grow_string(utf8_t *ustr);
+utf8_t *convert_to_utf8(uint8_t *bytes, uint64_t len);
 void add_character(utf8_t *ustr, uint8_t bytes[4], uint8_t len);
 
 /*
