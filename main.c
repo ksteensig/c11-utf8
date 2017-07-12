@@ -9,12 +9,11 @@ int main() {
 
     utf8_t *ustr = convert_to_utf8(str, strlen((char *)str) + 1);
     utf8_t *ustr2 = convert_to_utf8(str2, strlen((char *)str2) + 1);
+    utf8_t *ustr3 = utf8_concat(ustr, ustr2);
 
-    printf(u8"%s\n", ustr->u8str->utf8_string);
-    printf(u8"%s\n", ustr2->u8str->utf8_string);
-    printf(u8"%s\n", ustr->u8str->utf8_string);
-
-    printf("%d\n", ustr2->is_error);
+    printf(u8"%s\n", ustr->utf8.str);
+    printf(u8"%s\n", ustr2->utf8.str);
+    printf(u8"%s\n", ustr3->utf8.str);
 
     return 0;
 }
