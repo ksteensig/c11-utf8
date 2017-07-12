@@ -29,7 +29,7 @@
 #define TWO_BYTE(c) (((c >> 5) ^ TWO_BYTE_HEAD) == 0)
 
 #define ONE_BYTE_HEAD 0b0
-#define ONE_BYTE(c) (((c >> 7) & ONE_BYTE_HEAD) == 0)
+#define ONE_BYTE(c) (((c >> 7) ^ ONE_BYTE_HEAD) == 0)
 
 #define TRAILING_BYTE_HEAD 0b10
 #define TRAILING_BYTE(c) (((c >> 6) ^ 0b10) == 0)
@@ -56,8 +56,9 @@ typedef struct utf8_error_s {
 
 // cache for storing latest insertion position and length of character inserted in an utf8 string
 typedef struct utf8_cache_s {
-    uint64_t inserted_pos;  // position of first byte
-    uint8_t inserted_length;// length of inserted utf8 character
+    uint64_t uchar;         // position of the last accessed char relative to the other chars
+    uint64_t position;      // position of last accessed utf8 character
+    uint8_t length;         // length of last accessed utf8 character
 } utf8_cache_t;
 
 // utf8 representation
@@ -101,7 +102,7 @@ uint64_t utf8_strlen(utf8_t *ustr);
 bool utf8_compare(utf8_t *ustr1, utf8_t *ustr2);
 utf8_t *utf8_concat(utf8_t *ustr1, utf8_t *ustr2);
 uchar_t utf8_access(utf8_t *ustr, uint64_t pos);
-void utf8_insert(utf8_t *ustr1, utf8_t *ustr2, uint64_t pos);
+void utf8_insert(utf8_t *ustr1, utf8_t *ustr2, uint64_t uchar_pos);
 void utf8_remove(utf8_t *ustr, uint64_t pos);
 void utf8_overwrite(utf8_t *ustr, uint64_t pos);
 utf8_t *utf8_copy(utf8_t *ustr);

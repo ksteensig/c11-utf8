@@ -11,9 +11,22 @@ int main() {
     utf8_t *ustr2 = convert_to_utf8(str2, strlen((char *)str2) + 1);
     utf8_t *ustr3 = utf8_concat(ustr, ustr2);
 
+    uchar_t uchar;
+    utf8_t *ustr4;
+
+    for (uint64_t i = 0; i < utf8_strlen(ustr2) - 1; i++) {
+        uchar = utf8_access(ustr2, i);
+        ustr4 = convert_to_utf8(uchar.uchar, 4);
+
+        printf(u8"%s\n", ustr4->utf8.str);
+
+        free_utf8(ustr4);
+    }
+
     printf(u8"%s\n", ustr->utf8.str);
     printf(u8"%s\n", ustr2->utf8.str);
     printf(u8"%s\n", ustr3->utf8.str);
+    //printf(u8"%s\n", ustr4->utf8.str);
 
     return 0;
 }
