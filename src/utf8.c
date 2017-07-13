@@ -250,6 +250,14 @@ utf8_t *utf8_concat(utf8_t *ustr1, utf8_t *ustr2) {
     return n_ustr;
 }
 
+void print_uchar(uchar_t uc) {
+    utf8_t *ustr = convert_to_utf8(uc.uchar, 4);
+
+    printf(u8"%s: ", ustr->utf8.str);
+
+    free_utf8(ustr);
+}
+
 uchar_t utf8_access(utf8_t *ustr, uint64_t uchar) {
 
     uchar_t c = {.is_error = false, .length = 0, .uchar = {0, 0, 0, 0}};
@@ -282,7 +290,7 @@ uchar_t utf8_access(utf8_t *ustr, uint64_t uchar) {
             ustr->utf8.cache.position = position;
             return c;
         } else {
-            length = get_byte_length(str, min(4, ustr->utf8.bytes - position));
+            length = get_byte_length(str + position, min(4, ustr->utf8.bytes - position));
         }
 
         if (length == 0) {
